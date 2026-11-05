@@ -6,7 +6,7 @@ const code=await readFile(new URL('../sw.js',import.meta.url),'utf8');
 function worker(){
  const handlers={},deleted=[],requests=[],files=[];
  let cached=null,networkCalls=0;
- const context={URL,self:{location:{origin:'https://reader.example'},registration:{scope:'https://reader.example/books/'},clients:{claim:async()=>{}} ,addEventListener:(name,handler)=>handlers[name]=handler},caches:{open:async()=>({addAll:async list=>files.push(...list)}),keys:async()=>['pereplet-v0','pereplet-v1','kotoba-v5'],delete:async key=>deleted.push(key),match:async req=>{requests.push(req);return cached;}},fetch:async()=>{networkCalls++;return 'network';}};
+ const context={URL,self:{location:{origin:'https://reader.example'},registration:{scope:'https://reader.example/books/'},clients:{claim:async()=>{}} ,addEventListener:(name,handler)=>handlers[name]=handler},caches:{open:async()=>({addAll:async list=>files.push(...list)}),keys:async()=>['pereplet-v1','pereplet-v2','pereplet-covers-v1','kotoba-v5'],delete:async key=>deleted.push(key),match:async req=>{requests.push(req);return cached;}},fetch:async()=>{networkCalls++;return 'network';}};
  vm.runInNewContext(code,context);
  return {handlers,deleted,requests,files,setCached:v=>cached=v,get networkCalls(){return networkCalls;}};
 }
@@ -16,7 +16,7 @@ test('Офлайн-установка включает только сущест
  for(const file of w.files)await access(new URL(file==='./'?'../index.html':'../'+file.slice(2),import.meta.url));
 });
 test('Очистка кэша не затрагивает Kotoba и другие приложения',async()=>{
- const w=worker();let task;w.handlers.activate({waitUntil:p=>task=p});await task;assert.deepEqual(w.deleted,['pereplet-v0']);
+ const w=worker();let task;w.handlers.activate({waitUntil:p=>task=p});await task;assert.deepEqual(w.deleted,['pereplet-v1']);
 });
 test('Офлайн-кэш возвращает ресурс без сети и не перехватывает источники/другие приложения',async()=>{
  const w=worker();w.setCached('offline');let response;

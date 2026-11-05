@@ -36,10 +36,10 @@ test('Экспорт / импорт переносят библиотеку, ф�
  assert.throws(()=>validateState({...s,books:{[ids[0]]:{...s.books[ids[0]],updatedAt:'invalid'}}},ids));
 });
 test('Фильтр жанров не возвращает просмотренные книги',()=>{
- const s=decide(freshState(),'earthsea','rejected');assert.deepEqual(available(BOOKS,s,'Фэнтези').map(b=>b.id),['hobbit']);
+ const s=decide(freshState(),'earthsea','rejected'),books=available(BOOKS,s,'Фэнтези');assert.ok(books.some(b=>b.id==='hobbit'));assert.ok(books.every(b=>b.genre==='Фэнтези'&&b.id!=='earthsea'));
 });
 test('Статические ресурсы и офлайн-каталог полны',async()=>{
- for(const b of BOOKS)await access(new URL(`../assets/${b.id}.svg`,import.meta.url));
- const sw=await readFile(new URL('../sw.js',import.meta.url),'utf8');for(const id of ids)assert.ok(sw.includes(`'${id}'`));
- for(const file of ['index.html','style.css','app.js','core.js','data.js','manifest.webmanifest','assets/icon.svg'])await access(new URL('../'+file,import.meta.url));
+ assert.ok(BOOKS.length>=140);
+ for(const b of BOOKS){const url=new URL(b.coverUrl);assert.equal(url.protocol,'https:');assert.ok(['cdn.azbooka.ru','cdn.eksmo.ru','cdn.ast.ru'].includes(url.hostname));assert.ok(b.summary.length>50);}
+ for(const file of ['index.html','style.css','theme.js','app.js','core.js','data.js','manifest.webmanifest','assets/icon.svg','assets/fallback.svg'])await access(new URL('../'+file,import.meta.url));
 });

@@ -16,7 +16,7 @@ const art={
  orbit:'<circle cx="140" cy="225" r="63"/><ellipse cx="140" cy="225" rx="93" ry="27" transform="rotate(35 140 225)"/><ellipse cx="140" cy="225" rx="93" ry="27" transform="rotate(-35 140 225)"/><circle cx="140" cy="225" r="12"/>',
  eye:'<path d="M52 228q88-110 176 0-88 110-176 0z"/><ellipse cx="140" cy="228" rx="25" ry="46"/><path d="M140 184v88M75 194l-12-21m142 21 12-21M98 172l-6-20m90 20 6-20"/>'
 };
-for(const b of BOOKS){
+for(const b of BOOKS.filter(b=>b.art&&b.color)){
  let lines=[],line='';for(const word of b.title.split(' ')){if((line+' '+word).length>22&&line){lines.push(line);line=word;}else line+=(line?' ':'')+word;}if(line)lines.push(line);
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="280" height="400" viewBox="0 0 280 400"><rect width="280" height="400" fill="${b.color}"/><path d="M8 0v400" stroke="#000" opacity=".2" stroke-width="6"/><rect x="20" y="18" width="242" height="364" fill="none" stroke="${b.accent}" opacity=".5"/><rect x="25" y="23" width="232" height="354" fill="none" stroke="${b.accent}" opacity=".22"/><g fill="${b.accent}" text-anchor="middle"><text x="140" y="52" font-family="Georgia,serif" font-size="11" letter-spacing="1">${escape(b.author.split(',')[0])}</text>${lines.map((l,i)=>`<text x="140" y="${86+i*24}" font-family="Georgia,serif" font-size="21">${escape(l)}</text>`).join('')}</g><g fill="none" stroke="${b.accent}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${art[b.art]}</g><text x="140" y="354" text-anchor="middle" font-family="Georgia,serif" font-size="9" letter-spacing="3" fill="${b.accent}">П Е Р Е П Л Ё Т</text></svg>`;
  await writeFile(new URL(`./assets/${b.id}.svg`,import.meta.url),svg);

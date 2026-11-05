@@ -1,6 +1,21 @@
 export const STATUSES = Object.freeze({want:'Хочу прочитать',reading:'Читаю',read:'Прочитано',dropped:'Брошено'});
 export const KEY = 'pereplet:state:v1';
-export const freshState = () => ({version:1,books:{},history:[],goal:12});
+export const DAILY_LIMIT = 20;
+export const THEMES = Object.freeze({day:'Дневная',night:'Ночная',pink:'Нежно-розовая'});
+export const freshState = () => ({version:1,books:{},history:[],goal:12,theme:'day',daily:null});
+export function dayKey(date=new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function hash(text){let n=2166136261;for(const c of text){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
+export function prepareDaily(state,catalog,date=dayKey()) {
+  if(state.daily?.date===date)return state;
+  const ids=available(catalog,state).sort((a,b)=>hash(`${date}:${a.id}`)-hash(`${date}:${b.id}`)||a.id.localeCompare(b.id)).slice(0,DAILY_LIMIT).map(b=>b.id);
+  return {...state,daily:{date,ids}};
+}
+export function dailyAvailable(catalog,state,genre='all') {
+  const byId=new Map(catalog.map(b=>[b.id,b]));
+  return (state.daily?.ids||[]).map(id=>byId.get(id)).filter(b=>b&&verified(b)&&!state.books[b.id]&&(genre==='all'||b.genre===genre));
+}
 export function validISBN(value) {
   const s=String(value??'').replaceAll('-','').replaceAll(' ','');
   if(/^\d{13}$/.test(s))return [...s].reduce((sum,n,i)=>sum+Number(n)*(i%2?3:1),0)%10===0;
@@ -11,7 +26,7 @@ export function verified(book) {
   const v=book.verification;
   if(!v||typeof v.source!=='string')return false;
   let source;try{source=new URL(v.source);}catch{return false;}
-  return v.status==='verified' && v.language==='ru' && Boolean(v.translator && v.evidence) && validISBN(v.isbn) && /^\d{4}-\d{2}-\d{2}$/.test(v.checkedAt) && Number.isFinite(Date.parse(v.checkedAt)) && source.protocol==='https:' && ['azbooka.ru','eksmo.ru','search.rsl.ru'].includes(source.hostname) && book.review?.spoilerFree===true;
+  return v.status==='verified' && v.language==='ru' && Boolean(v.translator && v.evidence) && validISBN(v.isbn) && /^\d{4}-\d{2}-\d{2}$/.test(v.checkedAt) && Number.isFinite(Date.parse(v.checkedAt)) && source.protocol==='https:' && ['azbooka.ru','eksmo.ru','ast.ru','search.rsl.ru'].includes(source.hostname) && book.review?.spoilerFree===true;
 }
 export function validateState(raw,ids) {
   if(!raw || raw.version!==1 || !raw.books || typeof raw.books!=='object' || Array.isArray(raw.books)) throw new Error('Неверный формат резервной копии.');
@@ -22,6 +37,10 @@ export function validateState(raw,ids) {
     state.books[id]={decision:record.decision,status:record.decision==='accepted'?record.status:null,updatedAt:record.updatedAt};
   }
   state.goal=Number.isInteger(raw.goal)&&raw.goal>=1&&raw.goal<=999?raw.goal:12;
+  state.theme=Object.hasOwn(THEMES,raw.theme)?raw.theme:'day';
+  if(raw.daily&&/^\d{4}-\d{2}-\d{2}$/.test(raw.daily.date)&&Array.isArray(raw.daily.ids)) {
+    state.daily={date:raw.daily.date,ids:[...new Set(raw.daily.ids.filter(id=>typeof id==='string'&&allowed.has(id)))].slice(0,DAILY_LIMIT)};
+  }
   // История нужна только для отмены в текущем сеансе; импорт не доверяет её содержимому.
   return state;
 }

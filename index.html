@@ -9,6 +9,7 @@
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,7 +22,7 @@
       <a href="#rejected" data-nav="rejected">Отложенное</a>
       <a href="#stats" data-nav="stats">Статистика</a>
     </nav>
-    <a href="#settings" class="settings-link" aria-label="Настройки и данные">☷</a>
+    <div class="header-tools"><label class="theme-picker"><span class="sr-only">Тема оформления</span><select id="theme"><option value="day">☀ Дневная</option><option value="night">☾ Ночная</option><option value="pink">✿ Розовая</option></select></label><a href="#settings" class="settings-link" aria-label="Настройки и данные">☷</a></div>
   </header>
   <main id="main" tabindex="-1"></main>
   <footer class="footer"><span>Хорошая книга — начало новой истории.</span><a href="#about">О каталоге и переводах ↗</a></footer>
